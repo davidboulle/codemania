@@ -1,11 +1,14 @@
 {
 	"/": [
-		"src/routes/+page.ts"
+		"src/routes/+page.ts",
+		"src/routes/+page.server.ts"
 	],
 	"/about": [
 		"src/routes/about/+page.ts"
 	],
-	"/codemania": [],
+	"/codemania": [
+		"src/routes/codemania/+page.ts"
+	],
 	"/sverdle": [
 		"src/routes/sverdle/+page.server.ts"
 	],

@@ -4,15 +4,19 @@
 </script>
 
 <div class="app">
-	<Header />
+	<!--<Header />-->
 
 	<main>
 		<slot />
 	</main>
 
-	<footer>
-		<p>Codemania &copy; David Boulle 2020 - <script>document.write(new Date().getFullYear())</script></p>
-	</footer>
+	<!--<footer>
+		<p>
+			Codemania &copy; David Boulle 2020 - <script>
+				document.write(new Date().getFullYear());
+			</script>
+		</p>
+	</footer>-->
 </div>
 
 <style>
@@ -26,8 +30,8 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
 		width: 100%;
+		height: 100%;
 		margin: 0 auto;
 		box-sizing: border-box;
 	}
@@ -38,7 +42,7 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
-		font-size: .7em;
+		font-size: 0.7em;
 	}
 
 	footer a {
