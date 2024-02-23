@@ -2,8 +2,12 @@
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
-    extend: {},
-  },
+        extend: {
+          lineHeight: {
+            'zero': '0',
+          }
+        }
+    },
   plugins: [],
 }
 

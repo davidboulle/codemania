@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    "README.md": true,
+    ".npmrc": true,
+    ".eslintignore": true,
+    ".eslintrc.cjs": true,
+    ".git": true,
+    ".gitignore": true,
+    ".prettierignore": true,
+    ".prettierrc": true,
+    ".svelte-kit": true,
+    "LICENSE": true,
+    "node_modules": true,
+    "package-lock.json": true,
+    "package.json": true,
+    "playwright.config.ts": true,
+    "postcss.config.js": true,
+    ".vscode": true
+  }
+}
