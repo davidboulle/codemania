@@ -1,7 +1,7 @@
 <script lang="ts">
-	import WidgetIde from '../components/WidgetIde.svelte';
-	import WidgetManagement from '../components/WidgetManagement.svelte';
-	import WidgetStats from '../components/WidgetStats.svelte';
+	import WidgetIde from '$components/WidgetIde.svelte';
+	import WidgetManagement from '$components/WidgetManagement.svelte';
+	import WidgetStats from '$components/WidgetStats.svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from './../../tailwind.config.js';
 	import { onMount } from 'svelte';
@@ -37,7 +37,6 @@
 	}
 
 	function resize(element: HTMLElement) {
-		console.log(element);
 		const resizer = document.querySelector('.resizer');
 		let active: EventTarget | null;
 		let initialWidth = 0;
@@ -144,7 +143,7 @@
 
 <svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} on:keydown={onKeydown} on:resize={onWindowResize} />
 
-<div id="container-main" class="flex w-full min-w-64 select-none flex-col gap-2 overflow-hidden bg-slate-200 p-2 font-sans md:h-screen md:flex-row md:gap-0">
+<div id="container-main" class="flex min-h-screen w-full min-w-64 select-none flex-col gap-2 overflow-hidden bg-slate-200 p-2 font-sans md:h-screen md:flex-row md:gap-0">
 	<!-- Column 1 -->
 	<div id="column-1" class="flex w-full flex-col gap-2 md:w-[50%]" use:move use:resize>
 		{#if widescreen && swapped}
