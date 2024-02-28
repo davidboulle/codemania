@@ -5,6 +5,7 @@
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from './../../tailwind.config.js';
 	import { onMount } from 'svelte';
+	import { Tab } from '../models/Tab';
 
 	const twConfig = resolveConfig(tailwindConfig);
 
@@ -113,14 +114,12 @@
 		}
 	}
 
-	function onKeydown(event: Event) {}
 	function onWindowResize() {
 		let element: HTMLElement | null = document.querySelector('#column-1');
 		if (element == null) return;
 		if (element.style.width != '' && windowWidth <= breakpoint) {
 			element.style.width = '';
 		} else if (element.style.width == '' && windowWidth >= breakpoint) {
-			console.log('Custom resize recovered.');
 			element.style.width = `${resizeValue}px`;
 		}
 
@@ -134,20 +133,22 @@
 			widescreen = false;
 		}
 	}
+
+	let selected: Tab = new Tab('');
 </script>
 
 <svelte:head>
-	<title>{windowWidth}</title>
+	<title>CODEMANIA — {selected.name}</title>
 	<meta name="description" content="" />
 </svelte:head>
 
-<svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} on:keydown={onKeydown} on:resize={onWindowResize} />
+<svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} on:resize={onWindowResize} />
 
 <div id="container-main" class="flex min-h-screen w-full min-w-64 select-none flex-col gap-2 overflow-hidden bg-slate-200 p-2 font-sans md:h-screen md:flex-row md:gap-0">
 	<!-- Column 1 -->
 	<div id="column-1" class="flex w-full flex-col gap-2 md:w-[50%]" use:move use:resize>
 		{#if widescreen && swapped}
-			<WidgetIde />
+			<WidgetIde bind:selected />
 		{:else}
 			<WidgetStats />
 			<WidgetManagement />
@@ -165,7 +166,7 @@
 			<WidgetStats />
 			<WidgetManagement />
 		{:else}
-			<WidgetIde />
+			<WidgetIde bind:selected />
 		{/if}
 	</div>
 </div>

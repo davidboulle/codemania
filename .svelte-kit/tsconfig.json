@@ -7,6 +7,12 @@
 			"$components/*": [
 				"../src/components/*"
 			],
+			"$models": [
+				"../src/models"
+			],
+			"$models/*": [
+				"../src/models/*"
+			],
 			"$lib": [
 				"../src/lib"
 			],
