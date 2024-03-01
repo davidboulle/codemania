@@ -2,7 +2,7 @@
 // it so that it gets served as a static asset in production
 export const prerender = true;
 
-// CTRL K + CTRL C > CTRL K CTRL U
+// CTRL K + CTRL C  <--------->  CTRL K CTRL U
 
 // import { words, allowed } from './words.server';
 

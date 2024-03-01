@@ -5,7 +5,7 @@
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from './../../tailwind.config.js';
 	import { onMount } from 'svelte';
-	import { Tab } from '../models/Tab';
+	import { ProjectFile } from '$models/ProjectFile';
 
 	const twConfig = resolveConfig(tailwindConfig);
 
@@ -134,7 +134,7 @@
 		}
 	}
 
-	let selected: Tab = new Tab('');
+	let selected: ProjectFile = new ProjectFile('');
 </script>
 
 <svelte:head>

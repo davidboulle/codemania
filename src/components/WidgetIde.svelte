@@ -1,18 +1,30 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Tab } from '$models/Tab.js';
+	import { ProjectFile } from '$models/ProjectFile.js';
 
 	let tabs = [
-		new Tab('https://raw.githubusercontent.com/saadeghi/daisyui/master/src/lib/addPrefix.js'),
-		new Tab('https://raw.githubusercontent.com/saadeghi/daisyui/master/src/lib/createPlugin.js')
+		new ProjectFile('https://raw.githubusercontent.com/saadeghi/daisyui/master/src/lib/addPrefix.js'),
+		new ProjectFile('https://raw.githubusercontent.com/saadeghi/daisyui/master/src/lib/createPlugin.js')
 	];
 
 	export let widgetName = 'IDE';
-	export let selected: Tab;
+	export let selected: ProjectFile;
 
-	let ideContent = selected.progress;
+	let ideContent = '';
+	let ideContentNext = '';
 	let ready = false;
-	let wrap = false;
+	let wrap = true;
+	let animations: {
+		key: String;
+		error: boolean;
+	}[] = [];
+
+	let chainTimer: ReturnType<typeof setTimeout>;
+	let chainTimerStarted = false;
+	let chainAnimation = false;
+	let chainSize = 0;
+	let chainAnimationContainer: Element;
+	let chainAnimationValue: Element;
 
 	selected = tabs[0];
 
@@ -32,7 +44,8 @@
 		'text-tab-unactive': 'rgba(0, 0, 0, 0.7)',
 		'text-tab-hover': 'rgba(0, 0, 0, 0.7)',
 		'text-tab-active': 'rgba(0, 0, 0, 0.7)',
-		'text-tab-focus': 'rgba(0, 0, 0, 0.7)'
+		'text-tab-focus': 'rgba(0, 0, 0, 0.7)',
+		'text-light': '#cbd5e1'
 	};
 
 	$: cssVarStyles = Object.entries(ideStyle)
@@ -41,41 +54,133 @@
 
 	onMount(() => {
 		loadItems();
+		startChainTimer();
+		let el1 = document.querySelector('.ide-animations');
+		if (el1 != null) {
+			chainAnimationContainer = el1;
+		}
+		let el2 = document.querySelector('.anim-chain');
+		if (el2 != null) {
+			chainAnimationValue = el2;
+		}
 	});
+
+	async function startChainTimer() {
+		window.clearTimeout(chainTimer);
+		if (chainTimerStarted) {
+			// animate
+
+			// chainAnimationValue.appendChild
+			// var p = document.createElement('p'),
+			// p.className = 'block';
+			// jDiv.className = 'block-2';
+			// iDiv.appendChild(jDiv);
+			// document.getElementsByTagName('body')[0].appendChild(iDiv);
+
+			// chainAnimationValue.classList.add('chain-pulse');
+			// await tick();
+			// chainAnimationValue.classList.remove('chain-pulse');
+
+			chainAnimation = chainAnimation;
+		} else {
+			chainTimerStarted = true;
+		}
+		chainTimer = setTimeout(stopChainTimer, 3000);
+	}
+
+	function stopChainTimer() {
+		chainSize = 0;
+		animations = [];
+		clearTimeout(chainTimer);
+		chainTimerStarted = false;
+	}
 
 	const loadItems = async () => {
 		for (let i = 0; i < tabs.length; i++) {
 			const response = await fetch(tabs[i].path);
 			tabs[i].content = await response.text();
+			tabs[i].progressNext += tabs[i].getNextWord(tabs[i].progress.length);
 		}
+		ideContent = selected.progress;
+		ideContentNext = selected.progressNext;
 		ready = true;
 	};
 
-	const handleInput = (e: Event) => {
-		e.preventDefault();
-		// if ((e as KeyboardEvent).repeat) {
-		// 	return;
-		// }
-		if (selected.progress.length < selected.content.length) {
-			selected.progress += selected.content[selected.progress.length];
-			ideContent = selected.progress;
-		} else {
-			console.log('File complete');
+	const onKeyDown = (e: Event) => {
+		let event = e as KeyboardEvent;
+		let cancel = false;
+
+		//if (event.repeat) cancel = true;
+		if (event.key == 'Backspace') cancel = true; // backspace
+		if (event.key == 'Tab') cancel = true; // tab
+		if (event.keyCode >= 33 && event.keyCode <= 47) cancel = true; // arrows & misc keys
+
+		if (cancel) {
+			e.preventDefault();
+			console.log('Prevent');
 		}
 	};
 
-	function onTabChange(tab: Tab) {
+	const onKeyPress = (e: Event) => {
+		console.log('KeyPress');
+		e.preventDefault();
+		let event = e as KeyboardEvent;
+
+		if (selected.progress.length < selected.content.length) {
+			selected.progress += selected.content[selected.progress.length];
+			let char = event.key;
+			let charDisplay = event.key;
+			if (event.key == ' ') {
+				charDisplay = '⎵';
+			} else if (event.key == 'Enter') {
+				char = '\n';
+				charDisplay = '↲';
+			}
+			if (selected.isSameChar(char)) {
+				chainSize++;
+				animations.push({
+					key: charDisplay,
+					error: false
+				});
+				animations = animations;
+				startChainTimer();
+			} else {
+				if (chainTimerStarted) {
+					stopChainTimer();
+				}
+				animations.push({
+					key: charDisplay,
+					error: true
+				});
+				animations = animations;
+			}
+			if (selected.progress == selected.progressNext) {
+				selected.progressNext += selected.getNextWord(selected.progress.length);
+			}
+		} else {
+			selected.progress = '';
+			selected.progressNext = '';
+		}
+
+		ideContent = selected.progress;
+		ideContentNext = selected.progressNext;
+	};
+
+	function onTabChange(tab: ProjectFile) {
 		if (selected == tab) return;
 		selected = tab;
 		ideContent = selected.progress;
+		ideContentNext = selected.progressNext;
 		(document.querySelector('.ide-content') as HTMLElement)?.focus();
 		console.log('changed!');
 	}
+
+	let nextTreshold = 15;
 </script>
 
 <div class="widget-ide flew-grow relative flex min-h-96 flex-1 select-none flex-col rounded shadow-sm" style={cssVarStyles}>
 	<div class="ide-tabs no-scrollbar absolute inline-flex h-12 w-full items-end self-start overflow-x-scroll rounded-t pt-2">
-		<div class="ide-icon relative h-12 min-w-12 select-none border-0 pl-2 pr-3" />
+		<div on:dblclick={() => (wrap = !wrap)} class="ide-icon relative h-12 min-w-12 select-none border-0 pl-2 pr-3" />
 		{#each tabs as tab}
 			<button on:click={() => onTabChange(tab)} class:active={tab == selected} class="ide-tab shadow-0 relative h-10 min-w-48 max-w-64 pb-2 pl-4 pr-4 pt-2 text-sm">
 				<p class="truncate text-left">{tab.name}</p>
@@ -84,16 +189,23 @@
 	</div>
 	<textarea
 		disabled={!ready}
-		class="ide-content mt-12 flex-grow resize-none whitespace-nowrap p-4 font-mono outline-none"
-		class:whitespace-nowrap={!wrap}
-		on:dblclick={() => (wrap = !wrap)}
-		on:keydown={handleInput}
+		class="ide-content z-20 mt-12 flex-grow resize-none bg-transparent p-4 font-mono outline-none"
+		on:keypress={onKeyPress}
+		on:keydown={onKeyDown}
 		autocomplete="off"
 		autocorrect="off"
 		autocapitalize="off"
-		spellcheck="false"
-		placeholder="New file">{ideContent}</textarea
+		spellcheck="false">{ideContent}</textarea
 	>
+	<textarea readonly class="ide-content-next absolute bottom-0 left-0 right-0 top-0 z-10 mt-12 flex-grow resize-none p-4 font-mono outline-none" class:whitespace-nowrap={!wrap} spellcheck="false"
+		>{ideContentNext}</textarea
+	>
+	<div class="ide-animations absolute z-10 m-[50%] flex h-0 w-0 items-center justify-center">
+		<div class="anim-chain chain-pulse relative mt-10 w-auto whitespace-nowrap text-center">Chain × {chainSize}</div>
+		{#each animations as anim}
+			<p class:error={anim.error} class="absolute leading-zero">{anim.key}</p>
+		{/each}
+	</div>
 </div>
 
 <style>
@@ -101,6 +213,7 @@
 
 	.widget-ide {
 		border: solid 1px var(--border-external, gray);
+		background-color: rgba(0, 0, 0, 0);
 	}
 	.widget-ide .ide-tabs {
 		background-color: var(--bg-tabs);
@@ -185,7 +298,49 @@
 		z-index: 1000;
 		box-shadow: -3px 3px 0 0 var(--bg-tab-active);
 	}
-	.widget-ide .ide-content {
+	.widget-ide .ide-content-next {
 		background-color: var(--bg-input);
+		color: var(--text-light);
+	}
+	.widget-ide .ide-animations .anim-chain {
+		color: var(--text-light);
+	}
+	.widget-ide .ide-animations p {
+		color: var(--text-light);
+		animation: ping 1s cubic-bezier(0, 0, 0.2, 1) forwards 1;
+	}
+	.widget-ide .ide-animations p.error {
+		color: rgba(256, 0, 0, 0.3);
+	}
+
+	.chain-pulse {
+		animation: pulse 3s forwards 1;
+	}
+
+	@keyframes ping {
+		0% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		75%,
+		100% {
+			transform: scale(20);
+			opacity: 0;
+		}
+	}
+
+	@keyframes pulse {
+		0% {
+			transform: scale(1.1);
+		}
+		20% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		75%,
+		100% {
+			transform: scale(1);
+			opacity: 0;
+		}
 	}
 </style>
