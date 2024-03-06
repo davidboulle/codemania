@@ -23,8 +23,12 @@
 	let chainTimerStarted = false;
 	let chainAnimation = false;
 	let chainSize = 0;
-	let chainAnimationContainer: Element;
-	let chainAnimationValue: Element;
+
+	let chainAnimationContainer: HTMLElement;
+	let chainAnimationValue: HTMLElement;
+
+	let textArea1: HTMLTextAreaElement;
+	let textArea2: HTMLTextAreaElement;
 
 	selected = tabs[0];
 
@@ -55,14 +59,6 @@
 	onMount(() => {
 		loadItems();
 		startChainTimer();
-		let el1 = document.querySelector('.ide-animations');
-		if (el1 != null) {
-			chainAnimationContainer = el1;
-		}
-		let el2 = document.querySelector('.anim-chain');
-		if (el2 != null) {
-			chainAnimationValue = el2;
-		}
 	});
 
 	async function startChainTimer() {
@@ -161,9 +157,9 @@
 			selected.progress = '';
 			selected.progressNext = '';
 		}
-
 		ideContent = selected.progress;
 		ideContentNext = selected.progressNext;
+		scrollBottom();
 	};
 
 	function onTabChange(tab: ProjectFile) {
@@ -171,8 +167,24 @@
 		selected = tab;
 		ideContent = selected.progress;
 		ideContentNext = selected.progressNext;
-		(document.querySelector('.ide-content') as HTMLElement)?.focus();
+		textArea1.focus();
 		console.log('changed!');
+	}
+
+	function scrollBottom() {
+		textArea1.scrollTop = textArea1.scrollHeight;
+		textArea2.scrollLeft = textArea1.scrollLeft;
+		textArea2.scrollTop = textArea1.scrollTop;
+
+		if (textArea1.value.length > 10) {
+			textArea1.setSelectionRange(0, textArea1.value.length);
+			console.log(textArea1.value.length);
+		}
+	}
+
+	function onScroll() {
+		textArea2.scrollLeft = textArea1.scrollLeft;
+		textArea2.scrollTop = textArea1.scrollTop;
 	}
 
 	let nextTreshold = 15;
@@ -189,19 +201,26 @@
 	</div>
 	<textarea
 		disabled={!ready}
-		class="ide-content z-20 mt-12 flex-grow resize-none bg-transparent p-4 font-mono outline-none"
+		bind:this={textArea1}
+		class="ide-content absolute bottom-0 left-0 right-0 top-0 z-20 mt-12 flex-grow resize-none bg-transparent pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
+		class:whitespace-nowrap={!wrap}
 		on:keypress={onKeyPress}
 		on:keydown={onKeyDown}
+		on:scroll={onScroll}
 		autocomplete="off"
 		autocorrect="off"
 		autocapitalize="off"
 		spellcheck="false">{ideContent}</textarea
 	>
-	<textarea readonly class="ide-content-next absolute bottom-0 left-0 right-0 top-0 z-10 mt-12 flex-grow resize-none p-4 font-mono outline-none" class:whitespace-nowrap={!wrap} spellcheck="false"
-		>{ideContentNext}</textarea
+	<textarea
+		readonly
+		bind:this={textArea2}
+		class:whitespace-pre={!wrap}
+		class="ide-content-next bottom-0 left-0 right-0 top-0 z-10 mt-12 flex-grow resize-none pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
+		spellcheck="false">{ideContentNext}</textarea
 	>
-	<div class="ide-animations absolute z-10 m-[50%] flex h-0 w-0 items-center justify-center">
-		<div class="anim-chain chain-pulse relative mt-10 w-auto whitespace-nowrap text-center">Chain × {chainSize}</div>
+	<div bind:this={chainAnimationContainer} class="ide-animations absolute z-10 m-[50%] flex h-0 w-0 items-center justify-center">
+		<div bind:this={chainAnimationValue} class="anim-chain chain-pulse relative mt-10 w-auto whitespace-nowrap text-center">Chain × {chainSize}</div>
 		{#each animations as anim}
 			<p class:error={anim.error} class="absolute leading-zero">{anim.key}</p>
 		{/each}
@@ -209,7 +228,22 @@
 </div>
 
 <style>
-	/* IDE Windows_Notepad */
+	.ide-content::-webkit-scrollbar {
+		-webkit-appearance: none;
+		display: none;
+	}
+	.ide-content::-webkit-scrollbar-thumb {
+		display: none;
+	}
+
+	.ide-content-next::-webkit-scrollbar {
+		-webkit-appearance: none;
+		width: 7px;
+	}
+	.ide-content-next::-webkit-scrollbar-thumb {
+		border-radius: 4px;
+		opacity: 0;
+	}
 
 	.widget-ide {
 		border: solid 1px var(--border-external, gray);
