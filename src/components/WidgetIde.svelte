@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ProjectFile } from '$models/ProjectFile.js';
+	import { Project } from '$models/Project';
+
+	export let project: Project;
 
 	let tabs = [
 		new ProjectFile('https://raw.githubusercontent.com/saadeghi/daisyui/master/src/lib/addPrefix.js'),
@@ -8,7 +11,6 @@
 	];
 
 	export let widgetName = 'IDE';
-	export let selected: ProjectFile;
 
 	let ideContent = '';
 	let ideContentNext = '';
@@ -30,7 +32,7 @@
 	let textArea1: HTMLTextAreaElement;
 	let textArea2: HTMLTextAreaElement;
 
-	selected = tabs[0];
+	let selected: ProjectFile | null = null;
 
 	let ideStyle = {
 		'border-external': '#b5b5b5',
@@ -92,21 +94,25 @@
 	}
 
 	const loadItems = async () => {
-		for (let i = 0; i < tabs.length; i++) {
-			const response = await fetch(tabs[i].path);
-			tabs[i].content = await response.text();
-			tabs[i].progressNext += tabs[i].getNextWord(tabs[i].progress.length);
+		for (let i = 0; i < project.files.length; i++) {
+			let p = project.files[i];
+			const response = await fetch(p.path);
+			p.content = await response.text();
+			p.progressNext += p.getNextWord(p.progress.length);
 		}
-		ideContent = selected.progress;
-		ideContentNext = selected.progressNext;
-		ready = true;
+		selected = project.files[0];
+		if (selected != undefined) {
+			ideContent = selected.progress;
+			ideContentNext = selected.progressNext;
+			ready = true;
+		}
 	};
 
 	const onKeyDown = (e: Event) => {
 		let event = e as KeyboardEvent;
 		let cancel = false;
 
-		//if (event.repeat) cancel = true;
+		if (event.repeat) cancel = true;
 		if (event.key == 'Backspace') cancel = true; // backspace
 		if (event.key == 'Tab') cancel = true; // tab
 		if (event.keyCode >= 33 && event.keyCode <= 47) cancel = true; // arrows & misc keys
@@ -121,52 +127,59 @@
 		console.log('KeyPress');
 		e.preventDefault();
 		let event = e as KeyboardEvent;
+		if (selected != null) {
+			if (selected.progress.length < selected.content.length) {
+				selected.progress += selected.content[selected.progress.length];
 
-		if (selected.progress.length < selected.content.length) {
-			selected.progress += selected.content[selected.progress.length];
-			let char = event.key;
-			let charDisplay = event.key;
-			if (event.key == ' ') {
-				charDisplay = '⎵';
-			} else if (event.key == 'Enter') {
-				char = '\n';
-				charDisplay = '↲';
-			}
-			if (selected.isSameChar(char)) {
-				chainSize++;
-				animations.push({
-					key: charDisplay,
-					error: false
-				});
-				animations = animations;
-				startChainTimer();
-			} else {
-				if (chainTimerStarted) {
-					stopChainTimer();
+				// validation
+				let char = event.key;
+				let charDisplay = event.key;
+
+				if (event.key == ' ') {
+					charDisplay = '⎵';
+				} else if (event.key == 'Enter') {
+					char = '\n';
+					charDisplay = '↲';
 				}
-				animations.push({
-					key: charDisplay,
-					error: true
-				});
-				animations = animations;
+				if (selected.isSameChar(char)) {
+					chainSize++;
+					animations.push({
+						key: charDisplay,
+						error: false
+					});
+					animations = animations;
+					startChainTimer();
+				} else {
+					if (chainTimerStarted) {
+						stopChainTimer();
+					}
+
+					// animations.push({
+					// 	key: charDisplay,
+					// 	error: true
+					// });
+					// animations = animations;
+				}
+
+				if (selected.progress == selected.progressNext) {
+					selected.progressNext += selected.getNextWord(selected.progress.length);
+				}
+			} else {
+				selected.progress = '';
+				selected.progressNext = '';
 			}
-			if (selected.progress == selected.progressNext) {
-				selected.progressNext += selected.getNextWord(selected.progress.length);
-			}
-		} else {
-			selected.progress = '';
-			selected.progressNext = '';
+			ideContent = selected.progress;
+			ideContentNext = selected.progressNext;
+			scrollBottom();
 		}
-		ideContent = selected.progress;
-		ideContentNext = selected.progressNext;
-		scrollBottom();
 	};
 
 	function onTabChange(tab: ProjectFile) {
 		if (selected == tab) return;
+		console.log(tab.name);
 		selected = tab;
-		ideContent = selected.progress;
-		ideContentNext = selected.progressNext;
+		ideContent = selected?.progress;
+		ideContentNext = selected?.progressNext;
 		textArea1.focus();
 		console.log('changed!');
 	}
@@ -193,7 +206,7 @@
 <div class="widget-ide flew-grow relative flex min-h-96 flex-1 select-none flex-col rounded shadow-sm" style={cssVarStyles}>
 	<div class="ide-tabs no-scrollbar absolute inline-flex h-12 w-full items-end self-start overflow-x-scroll rounded-t pt-2">
 		<div on:dblclick={() => (wrap = !wrap)} class="ide-icon relative h-12 min-w-12 select-none border-0 pl-2 pr-3" />
-		{#each tabs as tab}
+		{#each project.files as tab}
 			<button on:click={() => onTabChange(tab)} class:active={tab == selected} class="ide-tab shadow-0 relative h-10 min-w-48 max-w-64 pb-2 pl-4 pr-4 pt-2 text-sm">
 				<p class="truncate text-left">{tab.name}</p>
 			</button>
@@ -316,7 +329,7 @@
 		border-bottom-right-radius: 0.375rem;
 		border-bottom: solid 1px var(--border-internal);
 		border-right: solid 1px var(--border-internal);
-		z-index: 1000;
+		z-index: 21;
 		box-shadow: 3px 3px 0 0 var(--bg-tab-active);
 	}
 	.widget-ide .ide-tabs .ide-tab.active::after {
@@ -329,7 +342,7 @@
 		border-bottom-left-radius: 0.375rem;
 		border-bottom: solid 1px var(--border-internal);
 		border-left: solid 1px var(--border-internal);
-		z-index: 1000;
+		z-index: 21;
 		box-shadow: -3px 3px 0 0 var(--bg-tab-active);
 	}
 	.widget-ide .ide-content-next {

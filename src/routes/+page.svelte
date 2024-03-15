@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { Project } from '$models/Project';
 	import WidgetIde from '$components/WidgetIde.svelte';
 	import WidgetManagement from '$components/WidgetManagement.svelte';
 	import WidgetStats from '$components/WidgetStats.svelte';
+	import OverlayProjectPicker from '$components/OverlayProjectPicker.svelte';
+
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from './../../tailwind.config.js';
-	import { onMount } from 'svelte';
-	import { ProjectFile } from '$models/ProjectFile';
 
 	const twConfig = resolveConfig(tailwindConfig);
 
@@ -134,39 +136,49 @@
 		}
 	}
 
-	let selected: ProjectFile = new ProjectFile('');
+	let project: Project = new Project('', '');
+	let displayPicker: boolean = true;
+
+	function start(event: CustomEvent<any>) {
+		project = event.detail;
+		displayPicker = false;
+	}
 </script>
 
 <svelte:head>
-	<title>CODEMANIA — {selected.name}</title>
+	<title>CODEMANIA — {project.name}</title>
 	<meta name="description" content="" />
 </svelte:head>
 
 <svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} on:resize={onWindowResize} />
 
-<div id="container-main" class="flex min-h-screen w-full min-w-64 select-none flex-col gap-2 overflow-hidden bg-slate-200 p-2 font-sans md:h-screen md:flex-row md:gap-0">
-	<!-- Column 1 -->
-	<div id="column-1" class="flex w-full flex-col gap-2 md:w-[50%]" use:move use:resize>
-		{#if widescreen && swapped}
-			<WidgetIde bind:selected />
-		{:else}
-			<WidgetStats />
-			<WidgetManagement />
-		{/if}
-	</div>
+{#if displayPicker}
+	<OverlayProjectPicker on:selected={start} />
+{:else}
+	<div id="container-main" class="flex min-h-screen w-full min-w-64 select-none flex-col gap-2 overflow-hidden bg-slate-200 p-2 font-sans md:h-screen md:flex-row md:gap-0">
+		<!-- Column 1 -->
+		<div id="column-1" class="flex w-full flex-col gap-2 md:w-[50%]" use:move use:resize>
+			{#if widescreen && swapped}
+				<WidgetIde bind:project />
+			{:else}
+				<WidgetStats {project} />
+				<WidgetManagement {project} />
+			{/if}
+		</div>
 
-	<!-- Divider -->
-	<div class="hidden min-h-96 w-2 flex-col justify-between text-slate-400 md:flex">
-		<button on:dblclick={resetColumnsSize} class="resizer flex flex-1 cursor-col-resize items-center justify-center text-center">•</button>
-	</div>
+		<!-- Divider -->
+		<div class="hidden min-h-96 w-2 flex-col justify-between text-slate-400 md:flex">
+			<button on:dblclick={resetColumnsSize} class="resizer flex flex-1 cursor-col-resize items-center justify-center text-center">•</button>
+		</div>
 
-	<!-- Column 2 -->
-	<div id="column-2" class="flex w-full flex-1 flex-col gap-2">
-		{#if widescreen && swapped}
-			<WidgetStats />
-			<WidgetManagement />
-		{:else}
-			<WidgetIde bind:selected />
-		{/if}
+		<!-- Column 2 -->
+		<div id="column-2" class="flex w-full flex-1 flex-col gap-2">
+			{#if widescreen && swapped}
+				<WidgetStats {project} />
+				<WidgetManagement {project} />
+			{:else}
+				<WidgetIde bind:project />
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}

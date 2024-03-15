@@ -1,0 +1,1 @@
+import{p as s,u as e,c,r as f,a as i,g as u,d as p}from"./runtime.Drpn6UTf.js";function _(){const t=c,n=t.u;n&&(n.b.length&&s(()=>{o(t),n.b.forEach(f)}),e(()=>{const r=i(()=>n.m.map(f));return()=>{for(const a of r)typeof a=="function"&&a()}}),n.a.length&&e(()=>{o(t),n.a.forEach(f)}))}function o(t){if(t.d)for(const n of t.d)u(n);p(t.s)}export{_ as i};

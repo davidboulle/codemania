@@ -20,10 +20,11 @@ export class ProjectFile {
 		let word = ''
         let index: number = i
         let loops = 0
+        let minSize = 10
         while (true) {
             let nextchar = this.content.charAt(index)
 
-            if (word.length > 4 && word.replaceAll(" ", "").length != 0 && word.charAt(word.length) != " ") {
+            if (word.length > minSize && word.replaceAll(" ", "").length != 0 && word.charAt(word.length) != " ") {
                 if (nextchar == " ") break;
                 if (nextchar == "\n") break;
             }
