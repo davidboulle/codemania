@@ -12,6 +12,8 @@
 
 	export let widgetName = 'IDE';
 
+	let autocomplete = false;
+
 	let ideContent = '';
 	let ideContentNext = '';
 	let ready = false;
@@ -112,7 +114,7 @@
 		let event = e as KeyboardEvent;
 		let cancel = false;
 
-		if (event.repeat) cancel = true;
+		// if (event.repeat) cancel = true;
 		if (event.key == 'Backspace') cancel = true; // backspace
 		if (event.key == 'Tab') cancel = true; // tab
 		if (event.keyCode >= 33 && event.keyCode <= 47) cancel = true; // arrows & misc keys
@@ -201,46 +203,75 @@
 	}
 
 	let nextTreshold = 15;
+
+	function getCurrentPercentage(decimals: number = 0) {
+		if (selected != null) {
+			return Math.floor((selected.progress.length * 100 * (1 * decimals)) / selected.content.length) / (1 * decimals);
+		} else {
+			return 0;
+		}
+	}
+
+	// &nbsp;&nbsp;0%
 </script>
 
-<div class="widget-ide flew-grow relative flex min-h-96 flex-1 select-none flex-col rounded shadow-sm" style={cssVarStyles}>
-	<div class="ide-tabs no-scrollbar absolute inline-flex h-12 w-full items-end self-start overflow-x-scroll rounded-t pt-2">
-		<div on:dblclick={() => (wrap = !wrap)} class="ide-icon relative h-12 min-w-12 select-none border-0 pl-2 pr-3" />
-		{#each project.files as tab}
-			<button on:click={() => onTabChange(tab)} class:active={tab == selected} class="ide-tab shadow-0 relative h-10 min-w-48 max-w-64 pb-2 pl-4 pr-4 pt-2 text-sm">
-				<p class="truncate text-left">{tab.name}</p>
-			</button>
-		{/each}
+<div class="flew-grow relative flex flex-1 select-none flex-col gap-2">
+	<div class="widget-stats flex-col rounded bg-slate-100 p-4 shadow-sm">
+		<div class="flex flex-nowrap font-mono">
+			<p>Complete :&nbsp;</p>
+			<p class="w-16">{project.files.filter((f) => f.complete).length}/{project.files.length}</p>
+			<p>Current File :&nbsp;</p>
+			<p class="w-16">{getCurrentPercentage(1)}%</p>
+			<p>({selected?.progress.length}/{selected?.content.length})</p>
+		</div>
+		<div style="width: {getCurrentPercentage(10)}%;" class="progressbar mt-1 h-1.5 rounded bg-slate-400 transition"></div>
 	</div>
-	<textarea
-		disabled={!ready}
-		bind:this={textArea1}
-		class="ide-content absolute bottom-0 left-0 right-0 top-0 z-20 mt-12 flex-grow resize-none bg-transparent pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
-		class:whitespace-nowrap={!wrap}
-		on:keypress={onKeyPress}
-		on:keydown={onKeyDown}
-		on:scroll={onScroll}
-		autocomplete="off"
-		autocorrect="off"
-		autocapitalize="off"
-		spellcheck="false">{ideContent}</textarea
-	>
-	<textarea
-		readonly
-		bind:this={textArea2}
-		class:whitespace-pre={!wrap}
-		class="ide-content-next bottom-0 left-0 right-0 top-0 z-10 mt-12 flex-grow resize-none pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
-		spellcheck="false">{ideContentNext}</textarea
-	>
-	<div bind:this={chainAnimationContainer} class="ide-animations absolute z-10 m-[50%] flex h-0 w-0 items-center justify-center">
-		<div bind:this={chainAnimationValue} class="anim-chain chain-pulse relative mt-10 w-auto whitespace-nowrap text-center">Chain × {chainSize}</div>
-		{#each animations as anim}
-			<p class:error={anim.error} class="absolute leading-zero">{anim.key}</p>
-		{/each}
+	<div class="widget-ide flew-grow relative flex min-h-96 flex-1 select-none flex-col rounded bg-white shadow-sm" style={cssVarStyles}>
+		<div class="ide-tabs no-scrollbar absolute inline-flex h-12 w-full items-end self-start overflow-x-scroll rounded-t pt-2">
+			<div on:dblclick={() => (wrap = !wrap)} class="ide-icon relative h-12 min-w-12 select-none border-0 pl-2 pr-3" />
+			{#each project.files as tab}
+				<button on:click={() => onTabChange(tab)} class:active={tab == selected} disabled class="ide-tab shadow-0 relative h-10 min-w-48 max-w-64 pb-2 pl-4 pr-4 pt-2 text-sm">
+					<p class="truncate text-left">{tab.name}</p>
+				</button>
+			{/each}
+		</div>
+		<textarea
+			disabled={!ready}
+			bind:this={textArea1}
+			class="ide-content absolute bottom-0 left-0 right-0 top-0 z-20 mt-12 flex-grow resize-none bg-transparent pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
+			class:whitespace-nowrap={!wrap}
+			on:keypress={onKeyPress}
+			on:keydown={onKeyDown}
+			on:scroll={onScroll}
+			autocomplete="off"
+			autocorrect="off"
+			autocapitalize="off"
+			spellcheck="false">{ideContent}</textarea
+		>
+		{#if autocomplete}
+			<textarea
+				readonly
+				bind:this={textArea2}
+				class:whitespace-pre={!wrap}
+				class="ide-content-next bottom-0 left-0 right-0 top-0 z-10 mt-12 flex-grow resize-none pb-32 pl-4 pr-4 pt-4 font-mono outline-none"
+				spellcheck="false">{ideContentNext}</textarea
+			>
+		{/if}
+
+		<div bind:this={chainAnimationContainer} class="ide-animations absolute z-10 m-[50%] flex h-0 w-0 items-center justify-center">
+			<div bind:this={chainAnimationValue} class="anim-chain chain-pulse relative mt-10 w-auto whitespace-nowrap text-center">Chain × {chainSize}</div>
+			{#each animations as anim}
+				<p class:error={anim.error} class="absolute leading-zero">{anim.key}</p>
+			{/each}
+		</div>
 	</div>
 </div>
 
 <style>
+	.progressbar {
+		transition: all 0.5s ease;
+	}
+
 	.ide-content::-webkit-scrollbar {
 		-webkit-appearance: none;
 		display: none;
@@ -260,7 +291,6 @@
 
 	.widget-ide {
 		border: solid 1px var(--border-external, gray);
-		background-color: rgba(0, 0, 0, 0);
 	}
 	.widget-ide .ide-tabs {
 		background-color: var(--bg-tabs);
@@ -344,6 +374,9 @@
 		border-left: solid 1px var(--border-internal);
 		z-index: 21;
 		box-shadow: -3px 3px 0 0 var(--bg-tab-active);
+	}
+	.widget-ide .ide-content {
+		color: black;
 	}
 	.widget-ide .ide-content-next {
 		background-color: var(--bg-input);

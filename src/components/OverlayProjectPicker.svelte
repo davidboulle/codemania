@@ -29,8 +29,8 @@
 		let project3 = new Project('LaVague', 'lavague-ai');
 		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/defaults.py'));
 		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/__init__.py'));
-		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/ActionEngine.py'));
-		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/default_prompt.py'));
+		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/action_engine.py'));
+		project3.files.push(new ProjectFile('https://raw.githubusercontent.com/lavague-ai/LaVague/main/src/lavague/prompts.py'));
 
 		projects = [project1, project2, project3];
 	}
